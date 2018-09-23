@@ -1,14 +1,14 @@
 package com.ibesli.restwebservices.filtering;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonFilter;
 
-@JsonIgnoreProperties(value = { "field1" })
+@JsonFilter("SomeBeanFilter")
+//@JsonIgnoreProperties(value = { "field1" })
 public class SomeBean {
 
 	private String field1;
 	private String field2;
-	@JsonIgnore
+//	@JsonIgnore
 	private String field3;
 
 	public SomeBean(String field1, String field2, String field3) {
