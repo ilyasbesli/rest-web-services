@@ -23,11 +23,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/jpa")
 public class UserJpaResource {
 
-	@Autowired
-	private UserDaoService userService;
-
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PostRepository postRepository;
 
 	@GetMapping("/users")
 	public List<User> retrieveAllUsers() {
@@ -51,7 +51,7 @@ public class UserJpaResource {
 
 	@PostMapping("/users")
 	public ResponseEntity<Object> createUser(@Valid @RequestBody User user) {
-		User savedUser = userService.save(user);
+        User savedUser = userRepository.save(user);
 
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(savedUser.getId())
 				.toUri();
@@ -61,9 +61,36 @@ public class UserJpaResource {
 
 	@DeleteMapping("/users/{id}")
 	public void deleteUser(@PathVariable int id) {
-		User user = userService.deleteUserById(id);
-		if (user == null) {
-			throw new UserNotFoundException("id:" + id + " user not found");
-		}
+        userRepository.deleteById(id);
 	}
+
+    @GetMapping("/users/{userId}/posts")
+    public List<Post> retrieveUserPosts(@PathVariable int userId)
+    {
+        Optional<User> user = userRepository.findById(userId);
+        if (!user.isPresent())
+        {
+            throw new UserNotFoundException("id:" + userId + " user not found");
+        }
+        return user.get().getPosts();
+    }
+
+    @PostMapping("/users/{id}/posts")
+    public ResponseEntity<Object> createPost(@PathVariable int id, @RequestBody Post post)
+    {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (!userOptional.isPresent())
+        {
+            throw new UserNotFoundException("id:" + id + " user not found");
+        }
+
+        User user = userOptional.get();
+
+        post.setUser(user);
+        postRepository.save(post);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(post.getId())
+                .toUri();
+
+        return ResponseEntity.created(uri).build();
+    }
 }
